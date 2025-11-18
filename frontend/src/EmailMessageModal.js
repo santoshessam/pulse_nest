@@ -8,15 +8,64 @@ function EmailMessageModal({ customer, onClose }) {
     }
   };
 
+  // Define speed tiers in Mbps
+  const speedTiers = [500, 1000, 2000, 5000, 7000];
+
+  // Get current speed and find next available tier
+  const currentSpeed = customer.current_download_mbps;
+  const nextSpeedTier = speedTiers.find(tier => tier > currentSpeed) || currentSpeed;
+
+  // Format speed display (convert Mbps to readable format)
+  const formatSpeed = (mbps) => {
+    if (mbps >= 1000) {
+      return `${mbps / 1000}G`;
+    }
+    return `${mbps}M`;
+  };
+
+  // Check if 5G can be sold based on constraint
+  const canSell5G = customer.avg_usage_percentage <= 50;
+
+  // Generate upgrade recommendations
+  const getUpgradeRecommendations = () => {
+    let recommendations = [];
+    const availableTiers = speedTiers.filter(tier => tier > currentSpeed);
+
+    availableTiers.forEach((tier, index) => {
+      // Skip 5G (5000M) if usage exceeds 50%
+      if (tier === 5000 && !canSell5G) {
+        return;
+      }
+
+      const timeframe = index === 0 ? '1 month' : index === 1 ? '2 months' : `${index + 1} months`;
+      recommendations.push(`• ${formatSpeed(tier)} - Recommended for ${timeframe}`);
+    });
+
+    return recommendations.join('\n');
+  };
+
+  // Build capacity notes message
+  const capacityNotesMessage = customer.capacity_notes
+    ? `\n\nIMPORTANT: ${customer.capacity_notes}`
+    : '';
+
   const emailMessage = `Dear ${customer.name},
 
 We noticed that your current internet usage is at ${customer.avg_usage_percentage}%, which is above 50% of your current plan capacity.
 
+Current Plan Details:
+• Speed: ${formatSpeed(currentSpeed)}
+• Usage: ${customer.avg_usage_percentage}%
+• Status: High usage detected
+
 To ensure you continue to enjoy the best online experience, we recommend upgrading your internet speed.
+
+Recommended Upgrade Options:
+${getUpgradeRecommendations()}${capacityNotesMessage}
 
 Click the link below to explore our faster plans and upgrade today!`;
 
-  const smsMessage = `Hi ${customer.name}! Your internet usage is at ${customer.avg_usage_percentage}%. Time to upgrade for a better experience! Visit: https://www.frontier.com/upgrade`;
+  const smsMessage = `Hi ${customer.name}! Your internet usage is at ${customer.avg_usage_percentage}% on your ${formatSpeed(currentSpeed)} plan. Upgrade to ${formatSpeed(nextSpeedTier)} for better experience! Visit: https://www.frontier.com/upgrade`;
 
   return (
     <div className="email-modal-backdrop" onClick={handleBackdropClick}>
