@@ -11,6 +11,11 @@ function DataTable({ data, isLoading, error, onDeviceSelect, onCustomerClick, on
   const [sendMessage, setSendMessage] = useState('');
   const tableWrapperRef = useRef(null);
 
+  // Clear selections when page changes
+  useEffect(() => {
+    setSelectedCustomers([]);
+  }, [currentPage]);
+
   if (isLoading) {
     return (
       <div className="loading">
