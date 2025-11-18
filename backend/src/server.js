@@ -18,7 +18,7 @@ app.get('/api/health', (req, res) => {
 // Get eligible customers for broadband upgrade
 app.get('/api/customers/eligible', async (req, res) => {
   try {
-    const { device_id, technology, min_usage, current_speed, exact_speed_match } = req.query;
+    const { device_id, technology, min_usage, current_speed, exact_speed_match, last_offer_days } = req.query;
 
     let query = `
       SELECT
@@ -36,6 +36,9 @@ app.get('/api/customers/eligible', async (req, res) => {
         c.avg_download_usage_mbps,
         c.current_download_mbps,
         c.olt_technology,
+        c.last_upgrade_date,
+        c.last_promo_offer_date,
+        c.contact_preference,
         MAX(os.max_utilization_pct) as max_utilization_pct,
         CASE
           WHEN MAX(os.max_utilization_pct) < CAST(c.avg_usage_percentage AS FLOAT)
@@ -51,7 +54,13 @@ app.get('/api/customers/eligible', async (req, res) => {
         AND c.olt_technology IN ('XGS-PON', '25XGS-PON')
         AND CAST(c.avg_usage_percentage AS FLOAT) > 50
         AND c.account_status = 'Active'
+        AND (c.last_upgrade_date IS NULL OR c.last_upgrade_date < CURRENT_DATE - INTERVAL '6 months')
     `;
+
+    // Only apply the base last_promo_offer_date filter if no specific last_offer_days filter is provided
+    if (!last_offer_days) {
+      query += ` AND (c.last_promo_offer_date IS NULL OR c.last_promo_offer_date < CURRENT_DATE - INTERVAL '2 months')`;
+    }
 
     const queryParams = [];
     let paramIndex = 1;
@@ -85,6 +94,11 @@ app.get('/api/customers/eligible', async (req, res) => {
       paramIndex++;
     }
 
+    // Add last offer days filter if provided
+    if (last_offer_days) {
+      query += ` AND c.last_promo_offer_date IS NOT NULL AND c.last_promo_offer_date >= CURRENT_DATE - INTERVAL '${parseInt(last_offer_days)} days'`;
+    }
+
     query += `
       GROUP BY
         nte.child_device_id,
@@ -97,7 +111,10 @@ app.get('/api/customers/eligible', async (req, res) => {
         c.avg_usage_percentage,
         c.avg_download_usage_mbps,
         c.current_download_mbps,
-        c.olt_technology
+        c.olt_technology,
+        c.last_upgrade_date,
+        c.last_promo_offer_date,
+        c.contact_preference
       HAVING
         MAX(nte.lag_type) = MAX(os.lag_type)
         AND AVG(nte.link_utilization_percentage) <= MAX(os.max_utilization_pct)
@@ -274,6 +291,70 @@ app.get('/api/customers/:accountId', async (req, res) => {
       success: false,
       message: 'Error fetching customer details',
       error: error.message,
+    });
+  }
+});
+
+// Bulk send upgrade offers to selected customers
+app.post('/api/customers/bulk-send-offer', async (req, res) => {
+  try {
+    const { customerIds } = req.body;
+
+    if (!customerIds || !Array.isArray(customerIds) || customerIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Customer IDs array is required'
+      });
+    }
+
+    console.log(`Processing bulk offer send for ${customerIds.length} customers`);
+
+    // Get customer details with contact preferences
+    const customersQuery = `
+      SELECT customer_id, first_name, last_name, email, phone, contact_preference
+      FROM team_pulse_nest.customers
+      WHERE customer_id = ANY($1)
+    `;
+
+    const customersResult = await pool.query(customersQuery, [customerIds]);
+    const customers = customersResult.rows;
+
+    console.log(`Found ${customers.length} customers to send offers`);
+
+    // Log the communication method for each customer (dummy operation)
+    customers.forEach(customer => {
+      const method = customer.contact_preference || 'email';
+      console.log(`Would send ${method} to ${customer.first_name} ${customer.last_name} (${customer.customer_id})`);
+    });
+
+    // Update last_promo_offer_date to current date
+    const updateQuery = `
+      UPDATE team_pulse_nest.customers
+      SET last_promo_offer_date = CURRENT_DATE
+      WHERE customer_id = ANY($1)
+    `;
+
+    await pool.query(updateQuery, [customerIds]);
+
+    console.log(`Updated last_promo_offer_date for ${customerIds.length} customers`);
+
+    res.json({
+      success: true,
+      sent: customers.length,
+      message: `Successfully sent upgrade offers to ${customers.length} customer(s)`,
+      breakdown: {
+        email: customers.filter(c => c.contact_preference === 'email').length,
+        phone: customers.filter(c => c.contact_preference === 'phone').length,
+        text: customers.filter(c => c.contact_preference === 'text').length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error sending bulk offers:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error sending bulk offers',
+      error: error.message
     });
   }
 });

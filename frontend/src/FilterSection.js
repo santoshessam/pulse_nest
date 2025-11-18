@@ -8,6 +8,7 @@ function FilterSection({ onFilter, isLoading, selectedDeviceId }) {
     min_usage: '50',
     current_speed: '',
     exact_speed_match: false,
+    last_offer_days: '',
   });
 
   // Update device_id when selectedDeviceId prop changes
@@ -68,6 +69,7 @@ function FilterSection({ onFilter, isLoading, selectedDeviceId }) {
       min_usage: '50',
       current_speed: '',
       exact_speed_match: false,
+      last_offer_days: '',
     };
     setFilters(resetFilters);
     onFilter(resetFilters);
@@ -168,6 +170,23 @@ function FilterSection({ onFilter, isLoading, selectedDeviceId }) {
               <span>Filter by exact speed only</span>
             </label>
           </div>
+        </div>
+
+        <div className="filter-group">
+          <label htmlFor="last_offer_days">Last Offer Date</label>
+          <select
+            id="last_offer_days"
+            name="last_offer_days"
+            value={filters.last_offer_days}
+            onChange={handleInputChange}
+            onKeyPress={handleKeyPress}
+          >
+            <option value="">All Customers</option>
+            <option value="7">Offered within last 7 days</option>
+            <option value="30">Offered within last 30 days</option>
+            <option value="60">Offered within last 60 days</option>
+            <option value="90">Offered within last 90 days</option>
+          </select>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import FilterSection from './FilterSection';
 import DataTable from './DataTable';
 import CustomerModal from './CustomerModal';
 import NetworkTopologyModal from './NetworkTopologyModal';
+import EmailMessageModal from './EmailMessageModal';
 import './App.css';
 
 function App() {
@@ -15,6 +16,8 @@ function App() {
   const [showModal, setShowModal] = useState(false);
   const [selectedTopologyDeviceId, setSelectedTopologyDeviceId] = useState(null);
   const [showTopologyModal, setShowTopologyModal] = useState(false);
+  const [selectedEmailCustomer, setSelectedEmailCustomer] = useState(null);
+  const [showEmailModal, setShowEmailModal] = useState(false);
 
   // Load initial data on mount
   useEffect(() => {
@@ -42,6 +45,9 @@ function App() {
       }
       if (filters.exact_speed_match) {
         params.append('exact_speed_match', 'true');
+      }
+      if (filters.last_offer_days) {
+        params.append('last_offer_days', filters.last_offer_days);
       }
 
       const response = await axios.get(`/api/customers/eligible?${params.toString()}`);
@@ -93,6 +99,16 @@ function App() {
   const handleCloseTopologyModal = () => {
     setShowTopologyModal(false);
     setSelectedTopologyDeviceId(null);
+  };
+
+  const handleEmailClick = (customer) => {
+    setSelectedEmailCustomer(customer);
+    setShowEmailModal(true);
+  };
+
+  const handleCloseEmailModal = () => {
+    setShowEmailModal(false);
+    setSelectedEmailCustomer(null);
   };
 
   return (
@@ -175,6 +191,8 @@ function App() {
             onDeviceSelect={handleDeviceSelect}
             onCustomerClick={handleCustomerClick}
             onTopologyClick={handleTopologyClick}
+            onEmailClick={handleEmailClick}
+            onRefresh={() => fetchCustomers({})}
           />
         </section>
       </main>
@@ -190,6 +208,13 @@ function App() {
         <NetworkTopologyModal
           deviceId={selectedTopologyDeviceId}
           onClose={handleCloseTopologyModal}
+        />
+      )}
+
+      {showEmailModal && selectedEmailCustomer && (
+        <EmailMessageModal
+          customer={selectedEmailCustomer}
+          onClose={handleCloseEmailModal}
         />
       )}
     </div>

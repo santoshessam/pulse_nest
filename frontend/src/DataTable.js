@@ -1,70 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
+import axios from 'axios';
 
-function DataTable({ data, isLoading, error, onDeviceSelect, onCustomerClick, onTopologyClick }) {
+function DataTable({ data, isLoading, error, onDeviceSelect, onCustomerClick, onTopologyClick, onEmailClick, onRefresh }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [sortColumn, setSortColumn] = useState(null);
   const [sortDirection, setSortDirection] = useState('asc');
+  const [selectedCustomers, setSelectedCustomers] = useState([]);
+  const [isSending, setIsSending] = useState(false);
+  const [sendMessage, setSendMessage] = useState('');
   const tableWrapperRef = useRef(null);
-  const topScrollRef = useRef(null);
-
-  // Synchronize horizontal scrolling
-  useEffect(() => {
-    const tableWrapper = tableWrapperRef.current;
-    const topScroll = topScrollRef.current;
-
-    if (!tableWrapper || !topScroll) return;
-
-    const syncTopToTable = () => {
-      if (tableWrapper.scrollLeft !== topScroll.scrollLeft) {
-        tableWrapper.scrollLeft = topScroll.scrollLeft;
-      }
-    };
-
-    const syncTableToTop = () => {
-      if (topScroll.scrollLeft !== tableWrapper.scrollLeft) {
-        topScroll.scrollLeft = tableWrapper.scrollLeft;
-      }
-    };
-
-    topScroll.addEventListener('scroll', syncTopToTable);
-    tableWrapper.addEventListener('scroll', syncTableToTop);
-
-    return () => {
-      topScroll.removeEventListener('scroll', syncTopToTable);
-      tableWrapper.removeEventListener('scroll', syncTableToTop);
-    };
-  }, []);
-
-  // Update top scrollbar width when data changes
-  useEffect(() => {
-    const tableWrapper = tableWrapperRef.current;
-    const topScroll = topScrollRef.current;
-
-    if (!tableWrapper || !topScroll) return;
-
-    const updateScrollWidth = () => {
-      const table = tableWrapper.querySelector('table');
-      const scrollContent = topScroll.firstChild;
-
-      if (table && scrollContent) {
-        const tableWidth = table.scrollWidth;
-        scrollContent.style.width = `${tableWidth}px`;
-        console.log('Table scrollWidth:', tableWidth, 'offsetWidth:', table.offsetWidth, 'Wrapper clientWidth:', tableWrapper.clientWidth);
-      }
-    };
-
-    // Run after render with multiple attempts to ensure DOM is ready
-    setTimeout(updateScrollWidth, 0);
-    setTimeout(updateScrollWidth, 100);
-    setTimeout(updateScrollWidth, 500);
-
-    window.addEventListener('resize', updateScrollWidth);
-
-    return () => {
-      window.removeEventListener('resize', updateScrollWidth);
-    };
-  }, [data, currentPage]);
 
   if (isLoading) {
     return (
@@ -90,6 +35,58 @@ function DataTable({ data, isLoading, error, onDeviceSelect, onCustomerClick, on
       </div>
     );
   }
+
+  // Selection handlers
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedCustomers(currentData.map(customer => customer.account_id));
+    } else {
+      setSelectedCustomers([]);
+    }
+  };
+
+  const handleSelectCustomer = (accountId) => {
+    setSelectedCustomers(prev => {
+      if (prev.includes(accountId)) {
+        return prev.filter(id => id !== accountId);
+      } else {
+        return [...prev, accountId];
+      }
+    });
+  };
+
+  const handleSendUpgradeOffer = async () => {
+    if (selectedCustomers.length === 0) {
+      setSendMessage('Please select at least one customer');
+      return;
+    }
+
+    setIsSending(true);
+    setSendMessage('');
+
+    try {
+      const response = await axios.post('/api/customers/bulk-send-offer', {
+        customerIds: selectedCustomers
+      });
+
+      if (response.data.success) {
+        setSendMessage(`Successfully sent offers to ${response.data.sent} customer(s)`);
+        setSelectedCustomers([]);
+        // Refresh data to show updated records
+        if (onRefresh) {
+          onRefresh();
+        }
+        setTimeout(() => setSendMessage(''), 5000);
+      } else {
+        setSendMessage('Error: ' + response.data.message);
+      }
+    } catch (error) {
+      console.error('Error sending bulk offers:', error);
+      setSendMessage('Error: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   const formatSpeed = (mbps) => {
     if (!mbps) return 'N/A';
@@ -222,17 +219,73 @@ function DataTable({ data, isLoading, error, onDeviceSelect, onCustomerClick, on
 
   return (
     <div className="data-table-container">
-      {totalPages > 1 && renderPagination()}
+      {selectedCustomers.length > 0 && (
+        <div style={{
+          backgroundColor: '#e8f5e9',
+          padding: '16px',
+          marginBottom: '16px',
+          borderRadius: '8px',
+          border: '2px solid #4caf50',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontWeight: '600', color: '#2e7d32', fontSize: '1rem' }}>
+              {selectedCustomers.length} customer{selectedCustomers.length !== 1 ? 's' : ''} selected
+            </span>
+            <button
+              onClick={handleSendUpgradeOffer}
+              disabled={isSending}
+              style={{
+                background: 'linear-gradient(135deg, #43a047 0%, #2e7d32 100%)',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '6px',
+                fontWeight: '600',
+                fontSize: '1rem',
+                cursor: isSending ? 'not-allowed' : 'pointer',
+                opacity: isSending ? 0.6 : 1,
+                transition: 'all 0.2s',
+                boxShadow: '0 2px 8px rgba(67, 160, 71, 0.3)'
+              }}
+              onMouseOver={(e) => !isSending && (e.target.style.transform = 'translateY(-2px)')}
+              onMouseOut={(e) => !isSending && (e.target.style.transform = 'translateY(0)')}
+            >
+              {isSending ? 'Sending...' : 'Send Upgrade Offer'}
+            </button>
+          </div>
+          {sendMessage && (
+            <div style={{
+              padding: '8px 16px',
+              borderRadius: '4px',
+              backgroundColor: sendMessage.includes('Error') ? '#ffebee' : '#c8e6c9',
+              color: sendMessage.includes('Error') ? '#c62828' : '#2e7d32',
+              fontWeight: '500'
+            }}>
+              {sendMessage}
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* Top horizontal scrollbar */}
-      <div className="table-top-scroll" ref={topScrollRef}>
-        <div></div>
-      </div>
+      {totalPages > 1 && renderPagination()}
 
       <div className="data-table" ref={tableWrapperRef}>
         <table>
           <thead>
             <tr>
+              <th style={{ width: '50px' }}>
+                <input
+                  type="checkbox"
+                  onChange={handleSelectAll}
+                  checked={selectedCustomers.length === currentData.length && currentData.length > 0}
+                  style={{ cursor: 'pointer' }}
+                />
+              </th>
               <th>Name</th>
               <th>Address</th>
               <th>Phone</th>
@@ -267,11 +320,22 @@ function DataTable({ data, isLoading, error, onDeviceSelect, onCustomerClick, on
               <th>Technology</th>
               <th>OLT Device</th>
               <th>Capacity Notes</th>
+              <th>Last Upgrade Date</th>
+              <th>Last Offer Date</th>
+              <th>Contact Preference</th>
             </tr>
           </thead>
           <tbody>
             {currentData.map((customer, index) => (
               <tr key={index}>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={selectedCustomers.includes(customer.account_id)}
+                    onChange={() => handleSelectCustomer(customer.account_id)}
+                    style={{ cursor: 'pointer' }}
+                  />
+                </td>
                 <td>
                   <span
                     className="customer-name-link"
@@ -289,7 +353,21 @@ function DataTable({ data, isLoading, error, onDeviceSelect, onCustomerClick, on
                 </td>
                 <td>{customer.address || 'N/A'}</td>
                 <td>{customer.phone || 'N/A'}</td>
-                <td>{customer.email || 'N/A'}</td>
+                <td>
+                  <span
+                    className="email-link"
+                    onClick={() => onEmailClick && onEmailClick(customer)}
+                    style={{
+                      color: '#2e7d32',
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                      fontWeight: '600',
+                    }}
+                    title="Click to send upgrade notification"
+                  >
+                    {customer.email || 'N/A'}
+                  </span>
+                </td>
                 <td>{customer.account_id || 'N/A'}</td>
                 <td>
                   <span className="speed-badge">
@@ -370,6 +448,45 @@ function DataTable({ data, isLoading, error, onDeviceSelect, onCustomerClick, on
                     </span>
                   ) : (
                     <span className="capacity-ok">✓ OK</span>
+                  )}
+                </td>
+                <td>
+                  {customer.last_upgrade_date
+                    ? new Date(customer.last_upgrade_date).toLocaleDateString()
+                    : 'N/A'}
+                </td>
+                <td>
+                  {customer.last_promo_offer_date
+                    ? new Date(customer.last_promo_offer_date).toLocaleDateString()
+                    : 'N/A'}
+                </td>
+                <td>
+                  {customer.contact_preference ? (
+                    <span
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        backgroundColor:
+                          customer.contact_preference === 'email'
+                            ? '#e3f2fd'
+                            : customer.contact_preference === 'phone'
+                            ? '#fff3e0'
+                            : '#e8f5e9',
+                        color:
+                          customer.contact_preference === 'email'
+                            ? '#1565c0'
+                            : customer.contact_preference === 'phone'
+                            ? '#e65100'
+                            : '#2e7d32',
+                      }}
+                    >
+                      {customer.contact_preference.charAt(0).toUpperCase() +
+                        customer.contact_preference.slice(1)}
+                    </span>
+                  ) : (
+                    'N/A'
                   )}
                 </td>
               </tr>
