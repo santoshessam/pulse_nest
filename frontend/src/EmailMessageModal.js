@@ -71,7 +71,10 @@ Click the link below to explore our faster plans and upgrade today!`;
     <div className="email-modal-backdrop" onClick={handleBackdropClick}>
       <div className="email-modal-content">
         <div className="email-modal-header">
-          <h2>Send Upgrade Notification</h2>
+          <div className="header-content">
+            <div className="frontier-logo">FRONTIER</div>
+            <h2>Send Upgrade Notification</h2>
+          </div>
           <button className="email-modal-close" onClick={onClose}>
             ×
           </button>

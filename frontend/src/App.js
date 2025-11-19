@@ -40,12 +40,6 @@ function App() {
       if (filters.min_usage) {
         params.append('min_usage', filters.min_usage);
       }
-      if (filters.current_speed) {
-        params.append('current_speed', filters.current_speed);
-      }
-      if (filters.exact_speed_match) {
-        params.append('exact_speed_match', 'true');
-      }
       if (filters.last_offer_days) {
         params.append('last_offer_days', filters.last_offer_days);
       }

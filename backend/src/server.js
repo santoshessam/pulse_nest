@@ -18,7 +18,7 @@ app.get('/api/health', (req, res) => {
 // Get eligible customers for broadband upgrade
 app.get('/api/customers/eligible', async (req, res) => {
   try {
-    const { device_id, technology, min_usage, current_speed, exact_speed_match, last_offer_days } = req.query;
+    const { device_id, technology, min_usage, last_offer_days } = req.query;
 
     let query = `
       SELECT
@@ -83,14 +83,6 @@ app.get('/api/customers/eligible', async (req, res) => {
     if (min_usage) {
       query += ` AND CAST(c.avg_usage_percentage AS FLOAT) >= $${paramIndex}`;
       queryParams.push(parseFloat(min_usage));
-      paramIndex++;
-    }
-
-    // Add current speed filter if provided
-    if (current_speed) {
-      const operator = exact_speed_match === 'true' ? '=' : '>=';
-      query += ` AND c.current_download_mbps ${operator} $${paramIndex}`;
-      queryParams.push(parseFloat(current_speed));
       paramIndex++;
     }
 

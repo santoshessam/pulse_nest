@@ -6,8 +6,6 @@ function FilterSection({ onFilter, isLoading, selectedDeviceId }) {
     device_id: '',
     technology: '',
     min_usage: '50',
-    current_speed: '',
-    exact_speed_match: false,
     last_offer_days: '',
   });
 
@@ -67,8 +65,6 @@ function FilterSection({ onFilter, isLoading, selectedDeviceId }) {
       device_id: '',
       technology: '',
       min_usage: '50',
-      current_speed: '',
-      exact_speed_match: false,
       last_offer_days: '',
     };
     setFilters(resetFilters);
@@ -134,42 +130,6 @@ function FilterSection({ onFilter, isLoading, selectedDeviceId }) {
             max="100"
             placeholder="e.g., 50"
           />
-        </div>
-
-        <div className="filter-group">
-          <label htmlFor="current_speed">
-            {filters.exact_speed_match ? 'Exact Current Speed (Mbps)' : 'Minimum Current Speed (Mbps)'}
-          </label>
-          <select
-            id="current_speed"
-            name="current_speed"
-            value={filters.current_speed}
-            onChange={handleInputChange}
-            onKeyPress={handleKeyPress}
-          >
-            <option value="">All Speeds</option>
-            <option value="25">25 Mbps {filters.exact_speed_match ? 'only' : 'and above'}</option>
-            <option value="50">50 Mbps {filters.exact_speed_match ? 'only' : 'and above'}</option>
-            <option value="100">100 Mbps {filters.exact_speed_match ? 'only' : 'and above'}</option>
-            <option value="200">200 Mbps {filters.exact_speed_match ? 'only' : 'and above'}</option>
-            <option value="500">500 Mbps {filters.exact_speed_match ? 'only' : 'and above'}</option>
-            <option value="1000">1000 Mbps {filters.exact_speed_match ? 'only' : 'and above'}</option>
-            <option value="2000">2000 Mbps {filters.exact_speed_match ? 'only' : 'and above'}</option>
-            <option value="5000">5000 Mbps {filters.exact_speed_match ? 'only' : 'and above'}</option>
-            <option value="7000">7000 Mbps {filters.exact_speed_match ? 'only' : 'and above'}</option>
-          </select>
-          <div style={{ marginTop: '10px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'normal', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                name="exact_speed_match"
-                checked={filters.exact_speed_match}
-                onChange={handleInputChange}
-                style={{ cursor: 'pointer' }}
-              />
-              <span>Filter by exact speed only</span>
-            </label>
-          </div>
         </div>
 
         <div className="filter-group">
