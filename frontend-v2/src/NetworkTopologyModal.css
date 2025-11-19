@@ -1,0 +1,252 @@
+/* Topology Modal Backdrop */
+.topology-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1001;
+  animation: fadeIn 0.2s ease-in;
+}
+
+/* Topology Modal Content */
+.topology-modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 95%;
+  max-width: 1400px;
+  max-height: 95vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Topology Modal Header */
+.topology-modal-header {
+  padding: 24px 32px;
+  border-bottom: 2px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #cc0033 0%, #990026 100%);
+  color: white;
+}
+
+.topology-modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.topology-modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: white;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.topology-modal-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Topology Modal Body */
+.topology-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.topology-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.topology-error {
+  background-color: #fff3e0;
+  color: #e65100;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #e65100;
+}
+
+/* Topology Statistics */
+.topology-stats {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  border: 2px solid #e0e0e0;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.stat-item {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #cc0033;
+}
+
+.stat-item label {
+  font-weight: 600;
+  color: #555;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-item span {
+  color: #333;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.stat-item .status-up {
+  color: #2ecc71;
+}
+
+.stat-item .status-down {
+  color: #e74c3c;
+}
+
+.stat-item .utilization {
+  color: #cc0033;
+}
+
+.stat-item .lag-type {
+  background: linear-gradient(135deg, #cc0033 0%, #990026 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.stat-item .customer-count {
+  color: #4a90e2;
+}
+
+/* Topology Legend */
+.topology-legend {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  border: 2px solid #e0e0e0;
+}
+
+.topology-legend h4 {
+  margin: 0 0 12px 0;
+  color: #cc0033;
+  font-size: 1rem;
+}
+
+.legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-color {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 2px solid #333;
+}
+
+.legend-item span {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* Topology Visualization */
+.topology-visualization {
+  flex: 1;
+  min-height: 500px;
+  background: #fafafa;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  position: relative;
+}
+
+/* Topology Modal Footer */
+.topology-modal-footer {
+  padding: 20px 32px;
+  border-top: 2px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background-color: #f8f9fa;
+}
+
+.topology-modal-footer .button {
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  font-size: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .topology-modal-content {
+    width: 98%;
+    max-height: 98vh;
+  }
+
+  .topology-modal-header {
+    padding: 16px;
+  }
+
+  .topology-modal-body {
+    padding: 16px;
+  }
+
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .legend-items {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .topology-visualization {
+    min-height: 300px;
+  }
+}

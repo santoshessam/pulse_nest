@@ -2,6 +2,8 @@
 
 A comprehensive full-stack web application for Frontier Communications that identifies and manages customers eligible for broadband speed upgrades based on usage patterns, network capacity, and technology capabilities.
 
+> **Note:** This is Version 1 (V1) of the application. An enhanced Version 2 (V2) with uplink topology analysis is available in the `backend-v2/` and `frontend-v2/` directories. See [README-V2.md](README-V2.md) for V2 documentation and differences.
+
 ## Table of Contents
 
 - [Overview](#overview)
@@ -21,7 +23,7 @@ Boost the Broadband helps telecommunications network engineers identify customer
 
 ### Key Capabilities
 
-- Smart customer eligibility filtering with 7+ filter options
+- Smart customer eligibility filtering with 4 filter options
 - Bulk customer selection and offer management
 - Network topology visualization
 - Automated promotional offer tracking
@@ -36,8 +38,6 @@ Boost the Broadband helps telecommunications network engineers identify customer
   - Filter by OLT Device ID
   - Filter by technology type (XGS-PON, 25XGS-PON)
   - Minimum usage percentage filter (customizable)
-  - Current speed filters (25M to 7G)
-  - Exact speed matching option
   - Last offer date tracking (7, 30, 60, 90 days)
 
 - **Automatic Eligibility Criteria**
@@ -266,8 +266,6 @@ Retrieves customers eligible for broadband upgrades based on filters.
 | `device_id` | string | Filter by specific OLT device ID |
 | `technology` | string | XGS-PON or 25XGS-PON |
 | `min_usage` | number | Minimum usage percentage (default: 50) |
-| `current_speed` | number | Current speed in Mbps |
-| `exact_speed_match` | boolean | Match exact speed vs minimum |
 | `last_offer_days` | number | Filter by offer recency (7, 30, 60, 90) |
 
 **Response:**
@@ -402,8 +400,6 @@ Retrieves network topology data for visualization.
    - **OLT Device ID**: Select specific device from dropdown
    - **Technology**: Choose XGS-PON or 25XGS-PON
    - **Minimum Usage %**: Set threshold (default: 50%)
-   - **Current Speed**: Filter by speed tier (25M - 7G)
-   - **Exact Speed Match**: Toggle for exact vs minimum speed
    - **Last Offer Date**: Track recent campaigns (7/30/60/90 days)
 
 3. **Search & Reset**
@@ -478,9 +474,9 @@ Retrieves network topology data for visualization.
 - Automatic refresh after bulk operations
 
 **FilterSection.js** (Filter Controls)
-- 6 filter types with validation
+- 4 filter types with validation
 - Device and technology dropdowns
-- Speed filtering with exact match toggle
+- Minimum usage percentage input
 - Last offer date tracking
 - Reset functionality
 
